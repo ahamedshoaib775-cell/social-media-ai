@@ -24,6 +24,28 @@ export const SocialAccountsView: React.FC = () => {
     addToast('success', 'Meta Graph API credentials saved successfully!');
   };
 
+  const handleOAuthConnect = () => {
+    const appId = creds.appId || '1029384756';
+    const redirectUri = window.location.origin;
+    const scope = 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,pages_manage_posts';
+    const oauthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=token`;
+
+    // Open Meta Login dialog in popup
+    const width = 600;
+    const height = 700;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+
+    window.open(
+      oauthUrl,
+      'Meta OAuth Login',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+
+    // Provide immediate user feedback / simulation fallback if popup blocked or closed
+    addToast('info', 'Opening Meta Facebook OAuth Login window...');
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
@@ -34,19 +56,29 @@ export const SocialAccountsView: React.FC = () => {
           </div>
           <div>
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Social Accounts & Meta Graph API</h2>
-            <p className="text-xs text-slate-500">Connect Instagram Business Accounts and Facebook Pages via Meta Developer App</p>
+            <p className="text-xs text-slate-500">Connect Instagram Business Accounts and Facebook Pages via Meta Login OAuth</p>
           </div>
         </div>
 
-        <a
-          href="https://developers.facebook.com/"
-          target="_blank"
-          rel="noreferrer"
-          className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
-        >
-          <span>Meta Developer Portal</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleOAuthConnect}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <Share2 className="w-4 h-4" />
+            Connect via Facebook / IG Login
+          </button>
+
+          <a
+            href="https://developers.facebook.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
+          >
+            <span>Meta Portal</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
 
       {/* API Connection Diagnostics Banner */}
