@@ -1,7 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const env = (import.meta as any).env || {};
+
+const supabaseUrl = 
+  env.VITE_SUPABASE_URL || 
+  env.NEXT_PUBLIC_SUPABASE_URL || 
+  '';
+
+const supabaseAnonKey = 
+  env.VITE_SUPABASE_ANON_KEY || 
+  env.VITE_SUPABASE_PUBLISHABLE_KEY || 
+  env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 
+  '';
 
 export const isSupabaseConfigured = (): boolean => {
   return (
@@ -16,3 +26,4 @@ export const isSupabaseConfigured = (): boolean => {
 export const supabase = isSupabaseConfigured()
   ? createClient(supabaseUrl, supabaseAnonKey)
   : (createClient('https://placeholder-project.supabase.co', 'placeholder-key') as ReturnType<typeof createClient>);
+
