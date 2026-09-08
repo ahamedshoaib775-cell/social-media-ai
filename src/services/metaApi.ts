@@ -80,12 +80,28 @@ export const publishToMetaAccounts = async (post: PostItem): Promise<MetaPublish
   // Attempt real Meta Graph API call when token is provided
   try {
     if (igAccountId) {
-      // Step 1: Create Container on Instagram Graph API
-      const createRes = await fetch(
-        `https://graph.facebook.com/v19.0/${igAccountId}/media?image_url=${encodeURIComponent(post.media_url || 'https://images.unsplash.com/photo-1542744094-3a31b272c490')}&caption=${encodeURIComponent(post.headline + '\n\n' + post.caption + '\n\n' + post.hashtags.join(' '))}&access_token=${accessToken}`,
-        { method: 'POST' }
-      );
+      const fullCaption = `${post.headline}\n\n${post.caption}\n\n${post.hashtags.join(' ')}`;
+      const mediaUrl = post.media_url || 'https://images.unsplash.com/photo-1542744094-3a31b272c490';
+      const isVideoOrReel = (post.required_media_type && post.required_media_type.toLowerCase().includes('video')) || 
+                            mediaUrl.match(/\.(mp4|mov|webm)(\?.*)?$/i) !== null || 
+                            post.content_type?.toLowerCase().includes('reel');
 
+      let containerEndpoint = `https://graph.facebook.com/v19.0/${igAccountId}/media`;
+      
+      let params = new URLSearchParams({
+        access_token: accessToken,
+        caption: fullCaption
+      });
+
+      if (isVideoOrReel) {
+        params.append('media_type', 'REELS');
+        params.append('video_url', mediaUrl);
+      } else {
+        params.append('image_url', mediaUrl);
+      }
+
+      // Step 1: Create Container on Instagram Graph API
+      const createRes = await fetch(`${containerEndpoint}?${params.toString()}`, { method: 'POST' });
       const createData = await createRes.json();
 
       if (createData.error) {
@@ -98,7 +114,28 @@ export const publishToMetaAccounts = async (post: PostItem): Promise<MetaPublish
 
       const creationId = createData.id;
 
-      // Step 2: Publish Container
+      // Step 2: For Videos/Reels, poll container status until FINISHED
+      if (isVideoOrReel) {
+        let isReady = false;
+        let attempts = 0;
+        while (!isReady && attempts < 10) {
+          await new Promise(r => setTimeout(r, 2000));
+          attempts++;
+          const statusRes = await fetch(`https://graph.facebook.com/v19.0/${creationId}?fields=status_code&access_token=${accessToken}`);
+          const statusData = await statusRes.json();
+          if (statusData.status_code === 'FINISHED') {
+            isReady = true;
+          } else if (statusData.status_code === 'ERROR') {
+            return {
+              success: false,
+              platform: 'instagram',
+              error: 'Instagram Reel processing error on Meta server.'
+            };
+          }
+        }
+      }
+
+      // Step 3: Publish Container
       const publishRes = await fetch(
         `https://graph.facebook.com/v19.0/${igAccountId}/media_publish?creation_id=${creationId}&access_token=${accessToken}`,
         { method: 'POST' }
