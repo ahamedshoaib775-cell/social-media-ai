@@ -51,23 +51,40 @@ export const SocialAccountsView: React.FC = () => {
 
       {/* API Connection Diagnostics Banner */}
       {!validation.valid ? (
-        <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 flex items-start gap-4">
-          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="space-y-1 text-xs">
-            <h4 className="font-extrabold text-amber-950 text-sm">Meta API Setup Required for Automated Publishing</h4>
-            <p className="leading-relaxed text-amber-900">
-              {validation.reason}
-            </p>
-            <p className="text-[11px] text-amber-800 pt-1">
-              You can still generate 7-day content plans, edit posts, and organize media in offline mode. Enter your Meta Graph API Access Token below to enable automated publishing.
-            </p>
+        <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 flex flex-col gap-3">
+          <div className="flex items-start gap-4">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1 text-xs">
+              <h4 className="font-extrabold text-amber-950 text-sm">Meta API Setup Guide for Live Automated Publishing</h4>
+              <p className="leading-relaxed text-amber-900">
+                {validation.reason}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-2 pt-3 border-t border-amber-200/70 text-xs space-y-2">
+            <p className="font-bold text-amber-950">How to get your Meta Access Token with required permissions:</p>
+            <ol className="list-decimal list-inside space-y-1.5 text-amber-900 font-medium pl-1">
+              <li>Open <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noreferrer" className="underline font-bold text-indigo-700 hover:text-indigo-900 inline-flex items-center gap-1">Meta Graph API Explorer <ExternalLink className="w-3 h-3"/></a></li>
+              <li>Select your Meta Developer App in the top dropdown</li>
+              <li>Under <strong>Permissions</strong>, search and select:
+                <div className="flex flex-wrap gap-1.5 my-1 font-mono text-[11px]">
+                  <span className="bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded-md font-bold">instagram_basic</span>
+                  <span className="bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded-md font-bold">instagram_content_publish</span>
+                  <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">pages_show_list</span>
+                  <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">pages_read_engagement</span>
+                </div>
+              </li>
+              <li>Click <strong>Generate Access Token</strong> and authorize your Instagram Business Account</li>
+              <li>Copy the token and paste it into the form below!</li>
+            </ol>
           </div>
         </div>
       ) : (
         <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 flex items-center gap-4 text-xs font-semibold">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
           <div>
-            Meta Graph API Credentials Active! Posts scheduled in SocialPilot AI will publish directly to Meta.
+            Meta Graph API Credentials Active! Instagram permissions <code className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">instagram_basic</code> & <code className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">instagram_content_publish</code> are authorized for automated publishing.
           </div>
         </div>
       )}
