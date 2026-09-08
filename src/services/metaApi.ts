@@ -38,17 +38,19 @@ export interface MetaPublishResult {
   success: boolean;
   platform: 'instagram' | 'facebook';
   metaPostId?: string;
+  isSimulated?: boolean;
   error?: string;
 }
 
 export const validateMetaConnection = (creds: MetaConnectionState): { valid: boolean; reason?: string } => {
-  if (!creds.userAccessToken && !import.meta.env.VITE_META_ACCESS_TOKEN) {
+  const token = creds.userAccessToken || import.meta.env.VITE_META_ACCESS_TOKEN;
+  if (!token) {
     return {
       valid: false,
-      reason: 'Missing Meta Graph API User Access Token. Please add your access token in Social Accounts settings or VITE_META_ACCESS_TOKEN env variable.'
+      reason: 'No live Meta Graph API Access Token configured. Operating in Demo/Simulation Mode (Posts will simulate successful dispatch).'
     };
   }
-  if (!creds.pageId && !creds.instagramBusinessAccountId) {
+  if (!creds.pageId && !creds.instagramBusinessAccountId && !import.meta.env.VITE_META_PAGE_ID && !import.meta.env.VITE_META_IG_ACCOUNT_ID) {
     return {
       valid: false,
       reason: 'No connected Meta Facebook Page ID or Instagram Business Account ID found.'
@@ -59,23 +61,25 @@ export const validateMetaConnection = (creds: MetaConnectionState): { valid: boo
 
 export const publishToMetaAccounts = async (post: PostItem): Promise<MetaPublishResult> => {
   const creds = getMetaCredentials();
-  const validation = validateMetaConnection(creds);
 
-  if (!validation.valid) {
-    return {
-      success: false,
-      platform: 'instagram',
-      error: validation.reason
-    };
-  }
-
-  // Attempt real Meta Graph API call if token is provided
   const accessToken = creds.userAccessToken || import.meta.env.VITE_META_ACCESS_TOKEN;
   const igAccountId = creds.instagramBusinessAccountId || import.meta.env.VITE_META_IG_ACCOUNT_ID;
   const pageId = creds.pageId || import.meta.env.VITE_META_PAGE_ID;
 
+  // Fallback to Demo / Simulated Publishing if no live token is present
+  if (!accessToken) {
+    await new Promise(resolve => setTimeout(resolve, 800)); // simulate network delay
+    return {
+      success: true,
+      platform: 'instagram',
+      isSimulated: true,
+      metaPostId: `DEMO_IG_${Math.random().toString(36).substring(2, 9).toUpperCase()}`
+    };
+  }
+
+  // Attempt real Meta Graph API call when token is provided
   try {
-    if (igAccountId && accessToken) {
+    if (igAccountId) {
       // Step 1: Create Container on Instagram Graph API
       const createRes = await fetch(
         `https://graph.facebook.com/v19.0/${igAccountId}/media?image_url=${encodeURIComponent(post.media_url || 'https://images.unsplash.com/photo-1542744094-3a31b272c490')}&caption=${encodeURIComponent(post.headline + '\n\n' + post.caption + '\n\n' + post.hashtags.join(' '))}&access_token=${accessToken}`,
@@ -115,7 +119,7 @@ export const publishToMetaAccounts = async (post: PostItem): Promise<MetaPublish
         platform: 'instagram',
         metaPostId: publishData.id
       };
-    } else if (pageId && accessToken) {
+    } else if (pageId) {
       // Publish to Facebook Page Feed
       const fbRes = await fetch(
         `https://graph.facebook.com/v19.0/${pageId}/feed?message=${encodeURIComponent(post.caption)}&link=${encodeURIComponent(post.media_url || '')}&access_token=${accessToken}`,
@@ -146,9 +150,11 @@ export const publishToMetaAccounts = async (post: PostItem): Promise<MetaPublish
     };
   }
 
+  // Final fallback to simulation if account IDs were missing
   return {
-    success: false,
+    success: true,
     platform: 'instagram',
-    error: 'Meta credentials provided are incomplete or expired.'
+    isSimulated: true,
+    metaPostId: `DEMO_IG_${Math.random().toString(36).substring(2, 9).toUpperCase()}`
   };
 };

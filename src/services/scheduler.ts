@@ -74,7 +74,8 @@ export class SchedulerEngine {
       const postDateTimeStr = `${post.scheduled_date} ${post.scheduled_time || '09:00'}`;
       const postDate = new Date(postDateTimeStr);
 
-      const isDue = isNaN(postDate.getTime()) || postDate <= now || true;
+      // Check if arrival date/time has passed
+      const isDue = isNaN(postDate.getTime()) || postDate <= now;
 
       if (isDue) {
         processedCount++;
@@ -85,7 +86,8 @@ export class SchedulerEngine {
 
           if (publishResult.success) {
             successCount++;
-            this.addLog('success', `Published successfully to ${publishResult.platform.toUpperCase()}! Media ID: ${publishResult.metaPostId || 'META_OK'}`, post.id);
+            const modeTag = publishResult.isSimulated ? '[Simulated Demo Mode]' : '[Meta Graph API]';
+            this.addLog('success', `Published ${modeTag} to ${publishResult.platform.toUpperCase()}! Media ID: ${publishResult.metaPostId || 'META_OK'}`, post.id);
             if (this.onPostStatusChanged) {
               this.onPostStatusChanged(post.id, 'Published');
             }
