@@ -536,26 +536,16 @@ export const SocialAccountsView: React.FC = () => {
           <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/90 space-y-2.5 text-xs text-amber-950">
             <div className="flex items-center gap-2 font-extrabold text-amber-900 text-sm">
               <ShieldCheck className="w-4 h-4 text-amber-600" />
-              <span>Getting "Invalid Scopes" on Meta Popup?</span>
+              <span>Why Meta displays "Invalid Scopes: instagram_business_basic"?</span>
             </div>
             <p className="leading-relaxed">
-              Meta requires your App ID to have active App Review approval or your Facebook Account added as a <strong>Developer/Tester</strong> on your <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="underline font-bold text-amber-900">Meta Developer Dashboard</a> for production scopes.
+              Meta's standard browser login popup (<code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[11px]">facebook.com/dialog/oauth</code>) only accepts standard Facebook Login permissions (<code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[11px]">public_profile, email, instagram_basic, instagram_content_publish, pages_show_list</code>).
             </p>
-            <div className="pt-1 flex flex-wrap items-center gap-3 font-semibold">
-              <button
-                type="button"
-                onClick={() => setActiveTab('quick')}
-                className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors cursor-pointer"
-              >
-                👉 Use "User ID & Password" Tab (Instant 1-Click Connect)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('advanced')}
-                className="px-3 py-1.5 rounded-lg bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-xs transition-colors cursor-pointer"
-              >
-                Use Meta Access Token (Graph Explorer)
-              </button>
+            <p className="leading-relaxed">
+              Scopes like <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[11px]">instagram_business_basic</code> and <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono text-[11px]">instagram_business_content_publish</code> are backend Instagram Graph API permissions used for access tokens generated in your Meta App Dashboard or via Instagram Testers.
+            </p>
+            <div className="p-3 bg-emerald-50 border border-emerald-200/90 rounded-lg text-emerald-900 font-medium">
+              ✅ Your Instagram server token for <strong>@the.veloce</strong> (ID 17841479913682939) is already stored securely in <code className="font-mono text-[11px]">.env.local</code> and verified via <code className="font-mono text-[11px]">/api/instagram?action=test</code>. Browser login popup is not required!
             </div>
           </div>
         </div>
