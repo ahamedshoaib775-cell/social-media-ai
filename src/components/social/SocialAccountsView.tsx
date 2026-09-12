@@ -132,8 +132,8 @@ export const SocialAccountsView: React.FC = () => {
   const handleOAuthConnect = () => {
     const appId = creds.appId || '1430172265635772';
     const redirectUri = window.location.origin;
-    // Current Instagram API permissions: instagram_business_basic & instagram_business_content_publish
-    const scope = 'public_profile,email,instagram_business_basic,instagram_business_content_publish';
+    // Facebook dialog OAuth scope string
+    const scope = 'public_profile,email,instagram_basic,instagram_content_publish,pages_show_list';
     const oauthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=token`;
 
     const width = 600;
