@@ -20,10 +20,19 @@ export interface InstagramProfileData {
 const META_STORAGE_KEY = 'socialpilot_meta_credentials';
 
 export const getMetaCredentials = (): MetaConnectionState => {
+  const envToken = (import.meta.env.VITE_META_ACCESS_TOKEN as string) || (import.meta.env.NEXT_PUBLIC_META_ACCESS_TOKEN as string) || '';
   const stored = localStorage.getItem(META_STORAGE_KEY);
   if (stored) {
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      return {
+        appId: parsed.appId || (import.meta.env.VITE_META_APP_ID as string) || '',
+        appSecret: parsed.appSecret || (import.meta.env.VITE_META_APP_SECRET as string) || '',
+        userAccessToken: parsed.userAccessToken || envToken,
+        pageId: parsed.pageId || (import.meta.env.VITE_META_PAGE_ID as string) || '',
+        instagramBusinessAccountId: parsed.instagramBusinessAccountId || (import.meta.env.VITE_META_IG_ACCOUNT_ID as string) || '',
+        isConnected: Boolean(parsed.isConnected || parsed.userAccessToken || envToken)
+      };
     } catch (e) {
       // fallback
     }
@@ -31,10 +40,10 @@ export const getMetaCredentials = (): MetaConnectionState => {
   return {
     appId: (import.meta.env.VITE_META_APP_ID as string) || '',
     appSecret: (import.meta.env.VITE_META_APP_SECRET as string) || '',
-    userAccessToken: (import.meta.env.VITE_META_ACCESS_TOKEN as string) || '',
+    userAccessToken: envToken,
     pageId: (import.meta.env.VITE_META_PAGE_ID as string) || '',
     instagramBusinessAccountId: (import.meta.env.VITE_META_IG_ACCOUNT_ID as string) || '',
-    isConnected: false
+    isConnected: Boolean(envToken)
   };
 };
 
