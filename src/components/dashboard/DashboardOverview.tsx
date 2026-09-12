@@ -17,9 +17,9 @@ export const DashboardOverview: React.FC = () => {
 
   const igAccount = socialAccounts.find(a => a.platform === 'instagram');
   const igAvatar = igAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
-  const igHandle = igAccount?.account_handle || '@artisanbloomcoffee';
-  const igName = igAccount?.account_name || 'Artisan Bloom Coffee';
-  const igFollowers = igAccount?.followers_count || 14850;
+  const igHandle = igAccount?.account_handle || '@the.veloce';
+  const igName = igAccount?.account_name || 'The Veloce';
+  const igFollowers = igAccount?.followers_count || 18400;
 
   return (
     <div className="space-y-8 animate-fade-in">

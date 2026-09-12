@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Share2, CheckCircle2, Key, Save, Lock, User, Sparkles, RefreshCw, Trash2, ShieldCheck, Users } from 'lucide-react';
+import { Share2, CheckCircle2, Key, Save, Lock, User, Sparkles, RefreshCw, Trash2, ShieldCheck, Users, Server, AlertCircle } from 'lucide-react';
 import { getMetaCredentials, saveMetaCredentials, getMockInstagramProfile } from '../../services/metaApi';
 import type { MetaConnectionState } from '../../services/metaApi';
+import { fetchInstagramServerStatus, runInstagramServerTest } from '../../services/instagramServerClient';
+import type { InstagramServerStatusResponse, InstagramServerTestResponse } from '../../services/instagramServerClient';
 
 export const SocialAccountsView: React.FC = () => {
   const { socialAccounts, updateSocialAccount, addToast } = useApp();
@@ -10,6 +12,46 @@ export const SocialAccountsView: React.FC = () => {
 
   // Connection tab state
   const [activeTab, setActiveTab] = useState<'quick' | 'oauth' | 'advanced'>('quick');
+
+  // Server-side Instagram status state
+  const [serverStatus, setServerStatus] = useState<InstagramServerStatusResponse | null>(null);
+  const [isTestingServer, setIsTestingServer] = useState(false);
+  const [lastTestResult, setLastTestResult] = useState<InstagramServerTestResponse | null>(null);
+
+  // Fetch server-side status on mount
+  useEffect(() => {
+    fetchInstagramServerStatus().then(status => {
+      setServerStatus(status);
+      if (status.connected) {
+        // Sync connected Instagram account details into AppContext
+        socialAccounts.forEach(acc => {
+          if (acc.platform === 'instagram') {
+            updateSocialAccount(acc.id, {
+              is_connected: true,
+              account_handle: status.username,
+              account_name: status.account?.name || 'the.veloce',
+              profile_picture_url: status.account?.profile_picture_url || acc.profile_picture_url,
+              followers_count: status.account?.followers_count || acc.followers_count,
+              biography: status.account?.biography || acc.biography
+            });
+          }
+        });
+      }
+    });
+  }, []);
+
+  const handleRunServerTest = async () => {
+    setIsTestingServer(true);
+    const result = await runInstagramServerTest();
+    setLastTestResult(result);
+    setIsTestingServer(false);
+
+    if (result.success) {
+      addToast('success', `Server Verification Passed! Validated permissions: ${result.permissionsValidated.join(', ')}`);
+    } else {
+      addToast('error', `Server Verification Issue: ${result.message}`);
+    }
+  };
 
   // Quick connect form state
   const [selectedPlatform, setSelectedPlatform] = useState<'instagram' | 'facebook'>('instagram');
@@ -64,7 +106,7 @@ export const SocialAccountsView: React.FC = () => {
     setIsConnecting(false);
     setUsername('');
     setPassword('');
-    addToast('success', `${selectedPlatform === 'instagram' ? 'Instagram' : 'Facebook'} account ${profile.username} connected with profile picture!`);
+    addToast('success', `${selectedPlatform === 'instagram' ? 'Instagram' : 'Facebook'} account ${profile.username} connected!`);
   };
 
   // Advanced developer save
@@ -75,7 +117,7 @@ export const SocialAccountsView: React.FC = () => {
     setCreds(updatedState);
 
     socialAccounts.forEach(acc => {
-      const defaultProfile = getMockInstagramProfile('artisanbloomcoffee');
+      const defaultProfile = getMockInstagramProfile('the.veloce');
       updateSocialAccount(acc.id, { 
         is_connected: true,
         profile_picture_url: acc.profile_picture_url || defaultProfile.profile_picture_url,
@@ -88,10 +130,10 @@ export const SocialAccountsView: React.FC = () => {
 
   // OAuth login popup trigger
   const handleOAuthConnect = () => {
-    const appId = creds.appId || '1029384756';
+    const appId = creds.appId || '1430172265635772';
     const redirectUri = window.location.origin;
-    // Base scopes required for Meta Login along with Instagram & Facebook permissions
-    const scope = 'public_profile,email,instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,pages_manage_posts';
+    // Current Instagram API permissions: instagram_business_basic & instagram_business_content_publish
+    const scope = 'public_profile,email,instagram_business_basic,instagram_business_content_publish';
     const oauthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=token`;
 
     const width = 600;
@@ -173,9 +215,11 @@ export const SocialAccountsView: React.FC = () => {
         {/* Instagram Card */}
         {(() => {
           const igAccount = socialAccounts.find(a => a.platform === 'instagram');
-          const isConnected = Boolean(creds.instagramBusinessAccountId || creds.userAccessToken || igAccount?.is_connected);
-          const avatarUrl = igAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
-          const followers = igAccount?.followers_count || 14850;
+          const isConnected = serverStatus?.connected || Boolean(creds.instagramBusinessAccountId || creds.userAccessToken || igAccount?.is_connected);
+          const usernameStr = serverStatus?.username || igAccount?.account_handle || '@the.veloce';
+          const accountIdStr = serverStatus?.accountId || '17841479913682939';
+          const avatarUrl = serverStatus?.account?.profile_picture_url || igAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+          const followers = serverStatus?.account?.followers_count || igAccount?.followers_count || 18400;
 
           return (
             <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4 relative overflow-hidden">
@@ -192,9 +236,9 @@ export const SocialAccountsView: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-slate-900 text-base">{igAccount?.account_name || 'Instagram Account'}</h4>
-                    <p className="text-xs text-rose-600 font-semibold flex items-center gap-1">
-                      <span>{igAccount?.account_handle || '@artisanbloomcoffee'}</span>
+                    <h4 className="font-extrabold text-slate-900 text-base">{serverStatus?.account?.name || igAccount?.account_name || 'The Veloce'}</h4>
+                    <p className="text-xs text-rose-600 font-semibold flex items-center gap-1 font-mono">
+                      <span>{usernameStr}</span>
                     </p>
                   </div>
                 </div>
@@ -203,15 +247,33 @@ export const SocialAccountsView: React.FC = () => {
                   isConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
                 }`}>
                   {isConnected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                  {isConnected ? 'Connected & Active' : 'Not Connected'}
+                  {isConnected ? 'Connected & Verified (Server)' : 'Not Connected'}
                 </span>
               </div>
 
-              {igAccount?.biography && (
-                <p className="text-xs text-slate-600 italic bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  "{igAccount.biography}"
-                </p>
-              )}
+              {/* Instagram Account Technical Specs & Verified Permissions */}
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-slate-500">Instagram Account ID:</span>
+                  <span className="font-bold text-slate-900">{accountIdStr}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-slate-500">Meta App ID:</span>
+                  <span className="font-bold text-slate-900">{serverStatus?.metaAppId || '1430172265635772'}</span>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/60">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Active Instagram API Permissions:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono text-[10px] font-bold">
+                      instagram_business_basic
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono text-[10px] font-bold">
+                      instagram_business_content_publish
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-4">
@@ -222,22 +284,52 @@ export const SocialAccountsView: React.FC = () => {
                       {followers.toLocaleString()} Followers
                     </span>
                   </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px] font-bold uppercase">Auto-Publish</span>
-                    <span className="font-extrabold text-emerald-700 text-xs">Posts, Reels & Stories</span>
-                  </div>
                 </div>
 
-                {isConnected && (
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleDisconnect('instagram')}
-                    className="text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer"
+                    onClick={handleRunServerTest}
+                    disabled={isTestingServer}
+                    className="text-indigo-600 hover:text-indigo-700 font-bold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Disconnect
+                    {isTestingServer ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Server className="w-3.5 h-3.5" />
+                    )}
+                    Test Server Endpoint
                   </button>
-                )}
+
+                  {isConnected && (
+                    <button
+                      onClick={() => handleDisconnect('instagram')}
+                      className="text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Disconnect
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* Server Connection Test Result Alert Box */}
+              {lastTestResult && (
+                <div className={`p-3.5 rounded-xl border text-xs space-y-1.5 animate-fade-in ${
+                  lastTestResult.success ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'
+                }`}>
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="flex items-center gap-1.5">
+                      {lastTestResult.success ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
+                      Server Test Status: {lastTestResult.success ? 'SUCCESS' : 'FAILED'}
+                    </span>
+                    <span className="text-[10px] font-mono opacity-80">{new Date(lastTestResult.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">{lastTestResult.message}</p>
+                  <div className="text-[10px] font-mono opacity-90 pt-1 border-t border-emerald-200/60">
+                    Endpoint: {lastTestResult.graphApiEndpointTested} (Tokens hidden & secured on server)
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}

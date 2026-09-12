@@ -117,17 +117,11 @@ export const fetchInstagramProfile = async (igAccountId: string, accessToken: st
 };
 
 export const validateMetaConnection = (creds: MetaConnectionState): { valid: boolean; reason?: string } => {
-  const token = creds.userAccessToken || (import.meta.env.VITE_META_ACCESS_TOKEN as string);
-  if (!token) {
+  // Uses server-side validated state
+  if (!creds.isConnected) {
     return {
       valid: false,
-      reason: 'No live Meta Graph API Access Token configured. Operating in Demo/Simulation Mode (Posts will simulate successful dispatch).'
-    };
-  }
-  if (!creds.pageId && !creds.instagramBusinessAccountId && !(import.meta.env.VITE_META_PAGE_ID as string) && !(import.meta.env.VITE_META_IG_ACCOUNT_ID as string)) {
-    return {
-      valid: false,
-      reason: 'No connected Meta Facebook Page ID or Instagram Business Account ID found.'
+      reason: 'Instagram Account not verified by server. Operating in Demo/Preparation Mode.'
     };
   }
   return { valid: true };

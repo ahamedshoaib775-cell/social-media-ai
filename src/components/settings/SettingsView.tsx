@@ -50,16 +50,16 @@ export const SettingsView: React.FC = () => {
         </div>
 
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 space-y-2 font-sans">
-          <h4 className="font-bold text-slate-900 text-sm">Environment Variables Guide</h4>
+          <h4 className="font-bold text-slate-900 text-sm">Server-Side Instagram API Setup</h4>
           <p>
-            Create a <code className="bg-slate-200 px-1 py-0.5 rounded font-mono text-indigo-700">.env</code> file in your project root with the following keys:
+            The Instagram connection runs via server-side API handler (<code className="bg-slate-200 px-1 py-0.5 rounded font-mono text-indigo-700">/api/instagram</code>). Tokens are stored exclusively in server environment variables.
           </p>
           <pre className="p-3 bg-slate-900 text-indigo-300 rounded-xl font-mono text-[11px] overflow-x-auto">
-{`VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_META_APP_ID=your-meta-app-id
-VITE_META_APP_SECRET=your-meta-app-secret
-VITE_META_ACCESS_TOKEN=your-meta-access-token`}
+{`META_APP_ID=1430172265635772
+INSTAGRAM_APP_ID=2006832513367438
+INSTAGRAM_ACCOUNT_ID=17841479913682939
+INSTAGRAM_ACCOUNT_USERNAME=the.veloce
+INSTAGRAM_ACCESS_TOKEN=<server_side_token_only>`}
           </pre>
         </div>
       </div>
