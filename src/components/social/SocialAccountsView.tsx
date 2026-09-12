@@ -90,7 +90,8 @@ export const SocialAccountsView: React.FC = () => {
   const handleOAuthConnect = () => {
     const appId = creds.appId || '1029384756';
     const redirectUri = window.location.origin;
-    const scope = 'instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,pages_manage_posts';
+    // Base scopes required for Meta Login along with Instagram & Facebook permissions
+    const scope = 'public_profile,email,instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,pages_manage_posts';
     const oauthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=token`;
 
     const width = 600;
@@ -426,7 +427,7 @@ export const SocialAccountsView: React.FC = () => {
             <div className="space-y-2">
               <h4 className="font-extrabold text-indigo-950 text-base">Meta Login Authorization</h4>
               <p className="text-xs text-indigo-900/80 leading-relaxed max-w-lg">
-                Clicking the button will open a official Meta Login window to select your Instagram Business Profile and Facebook Pages.
+                Clicking the button will open an official Meta Login window to select your Instagram Business Profile and Facebook Pages.
               </p>
             </div>
 
@@ -437,6 +438,33 @@ export const SocialAccountsView: React.FC = () => {
               <Share2 className="w-4 h-4" />
               Launch Meta OAuth Login
             </button>
+          </div>
+
+          {/* Meta Permission / Invalid Scopes Notice */}
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/90 space-y-2.5 text-xs text-amber-950">
+            <div className="flex items-center gap-2 font-extrabold text-amber-900 text-sm">
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
+              <span>Getting "Invalid Scopes" on Meta Popup?</span>
+            </div>
+            <p className="leading-relaxed">
+              Meta requires your App ID to have active App Review approval or your Facebook Account added as a <strong>Developer/Tester</strong> on your <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="underline font-bold text-amber-900">Meta Developer Dashboard</a> for production scopes.
+            </p>
+            <div className="pt-1 flex flex-wrap items-center gap-3 font-semibold">
+              <button
+                type="button"
+                onClick={() => setActiveTab('quick')}
+                className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                👉 Use "User ID & Password" Tab (Instant 1-Click Connect)
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('advanced')}
+                className="px-3 py-1.5 rounded-lg bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Use Meta Access Token (Graph Explorer)
+              </button>
+            </div>
           </div>
         </div>
       )}
