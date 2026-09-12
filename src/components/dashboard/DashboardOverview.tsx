@@ -1,10 +1,10 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sparkles, Calendar, Clock, CheckCircle2, Play, ArrowRight, Edit, AlertTriangle, Send } from 'lucide-react';
+import { Sparkles, Calendar, Clock, CheckCircle2, Play, ArrowRight, Edit, AlertTriangle, Send, Share2, Users } from 'lucide-react';
 import { isSupabaseConfigured } from '../../services/supabase';
 
 export const DashboardOverview: React.FC = () => {
-  const { posts, business, setCurrentView, setEditingPost, generateNew7DayPlan, runSchedulerManual, approvePost, publishPostNow } = useApp();
+  const { posts, business, socialAccounts, setCurrentView, setEditingPost, generateNew7DayPlan, runSchedulerManual, approvePost, publishPostNow } = useApp();
 
   const totalPosts = posts.length;
   const scheduledCount = posts.filter(p => p.status === 'Scheduled').length;
@@ -14,6 +14,12 @@ export const DashboardOverview: React.FC = () => {
 
   const todayPost = posts[0] || null;
   const upcomingPosts = posts.slice(1, 4);
+
+  const igAccount = socialAccounts.find(a => a.platform === 'instagram');
+  const igAvatar = igAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+  const igHandle = igAccount?.account_handle || '@artisanbloomcoffee';
+  const igName = igAccount?.account_name || 'Artisan Bloom Coffee';
+  const igFollowers = igAccount?.followers_count || 14850;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -52,6 +58,47 @@ export const DashboardOverview: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Connected Instagram Account Widget Bar */}
+      <div className="bg-gradient-to-r from-slate-900 to-indigo-950 border border-slate-800 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <img
+              src={igAvatar}
+              alt="Connected Instagram Account Avatar"
+              className="w-14 h-14 rounded-full object-cover ring-2 ring-rose-500 p-0.5 shadow-lg"
+            />
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-500 to-rose-600 text-white flex items-center justify-center text-[9px] font-black shadow-xs">
+              IG
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-base text-white">{igName}</h3>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">
+                Connected
+              </span>
+            </div>
+            <p className="text-xs text-rose-300 font-mono font-semibold">{igHandle}</p>
+            <div className="flex items-center gap-3 text-[11px] text-slate-300 mt-1">
+              <span className="flex items-center gap-1 font-semibold">
+                <Users className="w-3 h-3 text-indigo-400" />
+                {igFollowers.toLocaleString()} Followers
+              </span>
+              <span>•</span>
+              <span className="text-emerald-400 font-semibold">Auto-Publishing Active (Posts, Reels & Stories)</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setCurrentView('social')}
+          className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
+        >
+          <Share2 className="w-4 h-4 text-rose-400" />
+          Manage Instagram Link
+        </button>
       </div>
 
       {/* Database & Scheduler System Status Banner */}

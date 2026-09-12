@@ -11,7 +11,7 @@ interface PostEditorModalProps {
 }
 
 export const PostEditorModal: React.FC<PostEditorModalProps> = ({ post, onClose }) => {
-  const { updatePost, business, mediaAssets, addToast } = useApp();
+  const { updatePost, business, mediaAssets, socialAccounts, addToast } = useApp();
 
   const [formData, setFormData] = useState<PostItem>({ ...post });
   const [previewPlatform, setPreviewPlatform] = useState<'instagram' | 'facebook'>('instagram');
@@ -270,13 +270,13 @@ export const PostEditorModal: React.FC<PostEditorModalProps> = ({ post, onClose 
                   <div className="p-3 flex items-center justify-between border-b border-slate-100">
                     <div className="flex items-center gap-2.5">
                       <img
-                        src={business?.logo_url || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=100&q=80'}
-                        alt="Avatar"
-                        className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                        src={socialAccounts.find(a => a.platform === 'instagram')?.profile_picture_url || business?.logo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
+                        alt="Instagram Connected Avatar"
+                        className="w-8 h-8 rounded-full object-cover ring-2 ring-rose-500/80 p-0.5"
                       />
                       <div>
-                        <span className="font-bold block leading-tight text-slate-900">
-                          {business?.instagram_username || '@yourbusiness'}
+                        <span className="font-bold block leading-tight text-slate-900 font-mono text-[11px]">
+                          {socialAccounts.find(a => a.platform === 'instagram')?.account_handle || business?.instagram_username || '@artisanbloomcoffee'}
                         </span>
                         <span className="text-[10px] text-slate-400">{business?.location || 'Austin, TX'}</span>
                       </div>

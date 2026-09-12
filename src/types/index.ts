@@ -44,6 +44,9 @@ export type SocialAccount = {
   platform: 'instagram' | 'facebook';
   account_name: string;
   account_handle?: string;
+  profile_picture_url?: string;
+  followers_count?: number;
+  biography?: string;
   meta_account_id?: string;
   access_token?: string;
   token_expires_at?: string;

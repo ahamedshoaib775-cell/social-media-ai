@@ -91,6 +91,9 @@ export const sampleSocialAccounts: SocialAccount[] = [
     platform: 'instagram',
     account_name: 'Artisan Bloom Coffee',
     account_handle: '@artisanbloomcoffee',
+    profile_picture_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    followers_count: 14850,
+    biography: 'Specialty craft coffee roaster & sourdough bakery in Austin, TX ☕️ Organic & Single-Origin.',
     is_connected: true,
     created_at: new Date().toISOString()
   },
@@ -100,6 +103,8 @@ export const sampleSocialAccounts: SocialAccount[] = [
     platform: 'facebook',
     account_name: 'Artisan Bloom Coffee Austin',
     account_handle: 'facebook.com/artisanbloomcoffee',
+    profile_picture_url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80',
+    followers_count: 8920,
     is_connected: false,
     created_at: new Date().toISOString()
   }

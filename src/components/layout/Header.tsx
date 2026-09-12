@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenMobile }) => {
-  const { currentView, setCurrentView, generateNew7DayPlan, runSchedulerManual, business } = useApp();
+  const { currentView, setCurrentView, generateNew7DayPlan, runSchedulerManual, business, socialAccounts } = useApp();
 
   const viewTitles: Record<AppView, { title: string; subtitle: string }> = {
     landing: { title: 'SocialPilot AI', subtitle: 'AI Social Media Manager' },
@@ -25,6 +25,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobile }) => {
   };
 
   const info = viewTitles[currentView] || { title: 'Dashboard', subtitle: '' };
+  const igAccount = socialAccounts.find(a => a.platform === 'instagram');
+  const igAvatar = igAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+  const igHandle = igAccount?.account_handle || '@artisanbloomcoffee';
 
   return (
     <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 h-20 flex items-center justify-between">
@@ -48,6 +51,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobile }) => {
 
       {/* Header Quick Actions */}
       <div className="flex items-center gap-2.5">
+        {/* Connected Instagram Account Badge */}
+        <button
+          onClick={() => setCurrentView('social')}
+          title="Manage connected Instagram account"
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition-all cursor-pointer"
+        >
+          <img
+            src={igAvatar}
+            alt="Instagram Profile Avatar"
+            className="w-6 h-6 rounded-full object-cover ring-2 ring-rose-500"
+          />
+          <span className="text-xs font-bold text-slate-800 font-mono">{igHandle}</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+        </button>
+
         <button
           onClick={runSchedulerManual}
           title="Trigger immediate post queue processing"

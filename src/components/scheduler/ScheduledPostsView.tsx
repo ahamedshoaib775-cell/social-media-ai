@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Clock, Play, Pause, AlertCircle, CheckCircle2, Terminal, RefreshCw } from 'lucide-react';
 
 export const ScheduledPostsView: React.FC = () => {
-  const { posts, schedulerLogs, isSchedulerActive, toggleScheduler, runSchedulerManual, publishPostNow } = useApp();
+  const { posts, schedulerLogs, isSchedulerActive, socialAccounts, toggleScheduler, runSchedulerManual, publishPostNow } = useApp();
 
   const scheduledPosts = posts.filter(p => p.status === 'Scheduled');
   const publishedPosts = posts.filter(p => p.status === 'Published');
@@ -92,29 +92,51 @@ export const ScheduledPostsView: React.FC = () => {
 
         {scheduledPosts.length > 0 ? (
           <div className="divide-y divide-slate-100">
-            {scheduledPosts.map((post) => (
-              <div key={post.id} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                    <img src={post.media_url || 'https://images.unsplash.com/photo-1542744094-3a31b272c490'} alt="Media" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-sm font-bold text-slate-900 truncate">{post.headline}</h4>
-                    <p className="text-xs text-slate-500 truncate">{post.caption}</p>
-                    <div className="text-[11px] text-indigo-600 font-mono mt-0.5">
-                      Target: {post.scheduled_date} at {post.scheduled_time || '09:30 AM'}
+            {scheduledPosts.map((post) => {
+              const igAccount = socialAccounts.find(a => a.platform === 'instagram');
+              const igAvatar = igAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+              const igHandle = igAccount?.account_handle || '@artisanbloomcoffee';
+
+              const isReel = post.content_type === 'Reel' || post.required_media_type?.toLowerCase().includes('video');
+              const isStory = post.content_type?.toLowerCase().includes('story');
+              const formatLabel = isStory ? 'Instagram Story' : isReel ? 'Instagram Reel' : 'Instagram Post';
+
+              return (
+                <div key={post.id} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="relative shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden">
+                        <img src={post.media_url || 'https://images.unsplash.com/photo-1542744094-3a31b272c490'} alt="Media" className="w-full h-full object-cover" />
+                      </div>
+                      <img
+                        src={igAvatar}
+                        alt="Instagram Avatar"
+                        className="w-5 h-5 rounded-full object-cover absolute -bottom-1 -right-1 ring-2 ring-rose-500 shadow-xs"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+                          {formatLabel}
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-mono">{igHandle}</span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">{post.headline}</h4>
+                      <div className="text-[11px] text-indigo-600 font-mono mt-0.5">
+                        Target: {post.scheduled_date} at {post.scheduled_time || '09:30 AM'}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <button
-                  onClick={() => publishPostNow(post.id)}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs shrink-0 cursor-pointer"
-                >
-                  Publish Now
-                </button>
-              </div>
-            ))}
+                  <button
+                    onClick={() => publishPostNow(post.id)}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs shrink-0 cursor-pointer"
+                  >
+                    Publish Now
+                  </button>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="p-8 text-center text-xs text-slate-500">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Share2, CheckCircle2, Key, Save, Lock, User, Sparkles, RefreshCw, Trash2, ShieldCheck } from 'lucide-react';
-import { getMetaCredentials, saveMetaCredentials } from '../../services/metaApi';
+import { Share2, CheckCircle2, Key, Save, Lock, User, Sparkles, RefreshCw, Trash2, ShieldCheck, Users } from 'lucide-react';
+import { getMetaCredentials, saveMetaCredentials, getMockInstagramProfile } from '../../services/metaApi';
 import type { MetaConnectionState } from '../../services/metaApi';
 
 export const SocialAccountsView: React.FC = () => {
@@ -17,6 +17,9 @@ export const SocialAccountsView: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
 
+  // Live profile calculation for preview
+  const livePreviewProfile = username.trim() ? getMockInstagramProfile(username) : null;
+
   // Quick connect form submit
   const handleQuickConnect = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +31,9 @@ export const SocialAccountsView: React.FC = () => {
     setIsConnecting(true);
 
     // Simulate instant auto-detection and connection
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-    const cleanHandle = username.trim().startsWith('@') ? username.trim() : `@${username.trim()}`;
+    const profile = getMockInstagramProfile(username);
     const generatedAccountId = `IG_${Math.floor(10000000 + Math.random() * 90000000)}`;
 
     const updatedState: MetaConnectionState = {
@@ -49,8 +52,11 @@ export const SocialAccountsView: React.FC = () => {
       if (acc.platform === selectedPlatform) {
         updateSocialAccount(acc.id, {
           is_connected: true,
-          account_handle: cleanHandle,
-          account_name: `${selectedPlatform === 'instagram' ? 'Instagram' : 'Facebook'} (${cleanHandle})`
+          account_handle: profile.username,
+          account_name: profile.name,
+          profile_picture_url: profile.profile_picture_url,
+          followers_count: profile.followers_count,
+          biography: profile.biography
         });
       }
     });
@@ -58,7 +64,7 @@ export const SocialAccountsView: React.FC = () => {
     setIsConnecting(false);
     setUsername('');
     setPassword('');
-    addToast('success', `${selectedPlatform === 'instagram' ? 'Instagram' : 'Facebook'} account ${cleanHandle} connected successfully!`);
+    addToast('success', `${selectedPlatform === 'instagram' ? 'Instagram' : 'Facebook'} account ${profile.username} connected with profile picture!`);
   };
 
   // Advanced developer save
@@ -69,7 +75,12 @@ export const SocialAccountsView: React.FC = () => {
     setCreds(updatedState);
 
     socialAccounts.forEach(acc => {
-      updateSocialAccount(acc.id, { is_connected: true });
+      const defaultProfile = getMockInstagramProfile('artisanbloomcoffee');
+      updateSocialAccount(acc.id, { 
+        is_connected: true,
+        profile_picture_url: acc.profile_picture_url || defaultProfile.profile_picture_url,
+        followers_count: acc.followers_count || defaultProfile.followers_count
+      });
     });
 
     addToast('success', 'Meta Developer credentials saved successfully!');
@@ -162,16 +173,28 @@ export const SocialAccountsView: React.FC = () => {
         {(() => {
           const igAccount = socialAccounts.find(a => a.platform === 'instagram');
           const isConnected = Boolean(creds.instagramBusinessAccountId || creds.userAccessToken || igAccount?.is_connected);
+          const avatarUrl = igAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+          const followers = igAccount?.followers_count || 14850;
+
           return (
             <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4 relative overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-rose-500/20">
-                    IG
+                  <div className="relative">
+                    <img
+                      src={avatarUrl}
+                      alt="Instagram Profile"
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-rose-500/80 p-0.5 shadow-md"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-tr from-amber-500 to-rose-600 text-white flex items-center justify-center text-[9px] font-black shadow-xs">
+                      IG
+                    </div>
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-slate-900 text-base">Instagram Account</h4>
-                    <p className="text-xs text-slate-500">Auto-Publish Photos & Reels</p>
+                    <h4 className="font-extrabold text-slate-900 text-base">{igAccount?.account_name || 'Instagram Account'}</h4>
+                    <p className="text-xs text-rose-600 font-semibold flex items-center gap-1">
+                      <span>{igAccount?.account_handle || '@artisanbloomcoffee'}</span>
+                    </p>
                   </div>
                 </div>
 
@@ -183,12 +206,25 @@ export const SocialAccountsView: React.FC = () => {
                 </span>
               </div>
 
+              {igAccount?.biography && (
+                <p className="text-xs text-slate-600 italic bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                  "{igAccount.biography}"
+                </p>
+              )}
+
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Handle / ID:</span>
-                  <span className="font-bold text-slate-900 text-sm font-mono">
-                    {igAccount?.account_handle || (creds.instagramBusinessAccountId ? `@${creds.instagramBusinessAccountId}` : 'Not linked')}
-                  </span>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-bold uppercase">Audience</span>
+                    <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1">
+                      <Users className="w-3 h-3 text-indigo-600" />
+                      {followers.toLocaleString()} Followers
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-bold uppercase">Auto-Publish</span>
+                    <span className="font-extrabold text-emerald-700 text-xs">Posts, Reels & Stories</span>
+                  </div>
                 </div>
 
                 {isConnected && (
@@ -209,16 +245,28 @@ export const SocialAccountsView: React.FC = () => {
         {(() => {
           const fbAccount = socialAccounts.find(a => a.platform === 'facebook');
           const isConnected = Boolean(creds.pageId || creds.userAccessToken || fbAccount?.is_connected);
+          const avatarUrl = fbAccount?.profile_picture_url || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80';
+          const followers = fbAccount?.followers_count || 8920;
+
           return (
             <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs space-y-4 relative overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-blue-500/20">
-                    FB
+                  <div className="relative">
+                    <img
+                      src={avatarUrl}
+                      alt="Facebook Page"
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-600/80 p-0.5 shadow-md"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-black shadow-xs">
+                      FB
+                    </div>
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-slate-900 text-base">Facebook Page</h4>
-                    <p className="text-xs text-slate-500">Auto-Publish Feed Posts & Stories</p>
+                    <h4 className="font-extrabold text-slate-900 text-base">{fbAccount?.account_name || 'Facebook Page'}</h4>
+                    <p className="text-xs text-blue-600 font-semibold">
+                      {fbAccount?.account_handle || 'facebook.com/artisanbloomcoffee'}
+                    </p>
                   </div>
                 </div>
 
@@ -231,11 +279,14 @@ export const SocialAccountsView: React.FC = () => {
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Page Handle / ID:</span>
-                  <span className="font-bold text-slate-900 text-sm font-mono">
-                    {fbAccount?.account_handle || (creds.pageId ? `Page ID: ${creds.pageId}` : 'Not linked')}
-                  </span>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] font-bold uppercase">Audience</span>
+                    <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1">
+                      <Users className="w-3 h-3 text-blue-600" />
+                      {followers.toLocaleString()} Likes
+                    </span>
+                  </div>
                 </div>
 
                 {isConnected && (
@@ -295,12 +346,31 @@ export const SocialAccountsView: React.FC = () => {
               <input
                 type="text"
                 required
-                placeholder={selectedPlatform === 'instagram' ? 'e.g. @mybusiness_cafe or myuser_id' : 'e.g. facebook.com/mybusinesspage'}
+                placeholder={selectedPlatform === 'instagram' ? 'e.g. @artisanbloomcoffee' : 'e.g. facebook.com/mybusinesspage'}
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
             </div>
+
+            {/* Live Profile Detected Preview Card */}
+            {livePreviewProfile && selectedPlatform === 'instagram' && (
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-rose-50 to-indigo-50 border border-rose-200/80 flex items-center gap-3.5 animate-fade-in">
+                <img
+                  src={livePreviewProfile.profile_picture_url}
+                  alt="Detected Profile Avatar"
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-rose-500 shadow-sm"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-extrabold text-slate-900 truncate">{livePreviewProfile.name}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                  </div>
+                  <p className="text-[11px] text-rose-600 font-semibold">{livePreviewProfile.username}</p>
+                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">{livePreviewProfile.followers_count?.toLocaleString()} followers • Auto-detected Profile Picture</p>
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5 flex items-center gap-2">
