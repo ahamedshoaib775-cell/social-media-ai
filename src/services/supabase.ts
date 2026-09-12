@@ -1,16 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const env = (import.meta as any).env || {};
-
 const supabaseUrl = 
-  env.VITE_SUPABASE_URL || 
-  env.NEXT_PUBLIC_SUPABASE_URL || 
+  (import.meta.env.VITE_SUPABASE_URL as string) || 
+  (import.meta.env.NEXT_PUBLIC_SUPABASE_URL as string) || 
   '';
 
 const supabaseAnonKey = 
-  env.VITE_SUPABASE_ANON_KEY || 
-  env.VITE_SUPABASE_PUBLISHABLE_KEY || 
-  env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || 
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || 
+  (import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY as string) || 
+  (import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) || 
   '';
 
 export const isSupabaseConfigured = (): boolean => {
@@ -18,6 +17,7 @@ export const isSupabaseConfigured = (): boolean => {
     Boolean(supabaseUrl) && 
     Boolean(supabaseAnonKey) && 
     !supabaseUrl.includes('YOUR_SUPABASE') && 
+    !supabaseUrl.includes('placeholder-project') &&
     supabaseUrl.startsWith('https://')
   );
 };
@@ -26,4 +26,5 @@ export const isSupabaseConfigured = (): boolean => {
 export const supabase = isSupabaseConfigured()
   ? createClient(supabaseUrl, supabaseAnonKey)
   : (createClient('https://placeholder-project.supabase.co', 'placeholder-key') as ReturnType<typeof createClient>);
+
 

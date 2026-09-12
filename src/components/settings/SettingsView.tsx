@@ -37,14 +37,14 @@ export const SettingsView: React.FC = () => {
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
             <span className="text-[10px] text-slate-400 font-bold uppercase block font-sans mb-1">Supabase URL</span>
             <span className="text-slate-800 truncate block">
-              {import.meta.env.VITE_SUPABASE_URL || 'Not configured (Using Local Engine)'}
+              {import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || 'Not configured (Using Local Engine)'}
             </span>
           </div>
 
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
             <span className="text-[10px] text-slate-400 font-bold uppercase block font-sans mb-1">Supabase Anon Key</span>
             <span className="text-slate-800 truncate block">
-              {import.meta.env.VITE_SUPABASE_ANON_KEY ? '••••••••••••••••' : 'Not configured'}
+              {(import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) ? '••••••••••••••••' : 'Not configured'}
             </span>
           </div>
         </div>
